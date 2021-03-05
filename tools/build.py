@@ -45,7 +45,7 @@ def download_url(target: Path, url):
         with open(target / filename, "wb") as dst:
             shutil.copyfileobj(src, dst)
 
-def get_pylaunch(dest: Path):
+def refresh_pylaunch(dest: Path):
     USER = "pfmoore"
     PROJECT = "pylaunch"
     API_URL = f"https://api.github.com/repos/{USER}/{PROJECT}/releases/latest"
@@ -58,89 +58,113 @@ def get_pylaunch(dest: Path):
     if url is None:
         raise ValueError("Could not find pylaunch release")
 
+    if (dest / "pylaunch.exe").exists():
+        print("Refreshing pylaunch launchers")
+    else:
+        print("Installing pylaunch launchers")
+
     with urlopen(url) as pl:
         with ZipFile(io.BytesIO(pl.read())) as z:
             z.extractall(str(dest))
 
-def install_script_dependencies(scripts: Path):
+def refresh_script_dependencies(scripts: Path):
     packages = scripts / "__pypackages__"
+    print("Refreshing script dependencies")
+    # First, remove everthing from __pypackages__
+    # that isn't managed by git.
+    subprocess.run([
+        "git", "clean", "-f", "-X", str(packages)
+    ])
+    # Now install the required packages
     subprocess.run([
         sys.executable,
         "-m", "pip",
         "--disable-pip-version-check",
         "install",
-        "--upgrade",
         "--target", packages,
         "-r", packages / "requirements.txt"
     ])
 
 PY_EXTENSIONS = [".py", ".pyz", ".pyw", ".pyzw"]
 
-def link_launcher(tools: Path, target: Path):
+def refresh_launcher_links(tools: Path, target: Path):
+    print(f"Refreshing launcher links in {target.relative_to(Path.cwd())}")
     assert tools.parent == target.parent
     for script in target.glob("*.py*"):
         if script.suffix in PY_EXTENSIONS:
-            launcher = script.with_suffix(".exe")
-            if launcher.exists():
-                # Assume this is a rebuild, and the existing link can stay.
-                continue
             if script.suffix.endswith("w"):
                 pylaunch = Path("..", tools.name, "pylaunchw.exe")
             else:
                 pylaunch = Path("..", tools.name, "pylaunch.exe")
-            launcher.symlink_to(pylaunch)
+
+            launcher = script.with_suffix(".exe")
+            if launcher.exists():
+                if launcher.is_symlink() and launcher.readlink() == pylaunch:
+                    pass
+                else:
+                    print(f"Skipping {launcher.name} as it is not a launcher link")
+                    continue
+            else:
+                launcher.symlink_to(pylaunch)
+
+def refresh_apps(target: Path):
+    # Install the required apps. We do this even without
+    # rebuild, as we're upgrading in place in that case
+    for app in ("shiv", "pipx", "virtualenv"):
+        action = "Refreshing" if (target / f"{app}.pyz").exists() else "Installing"
+        print(f"{action} application {app}")
+        if app == "virtualenv":
+            # Virtualenv supplies its own zipapp
+            download_url(target, VIRTUALENV_URL)
+        else:
+            make_zipapp(target, app)
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--rebuild", action="store_true", help="Rebuild existing installation")
-    parser.add_argument("target", help="Target directory for the build")
+    parser.add_argument("--apps", action="store_true", help="Refresh zipapps")
+    parser.add_argument("--launchers", action="store_true", help="Refresh pylaunch")
+    parser.add_argument("--script-deps", action="store_true", help="Refresh script dependencies")
+    parser.add_argument("--launcher-links", action="store_true", help="Refresh launcher links")
+    parser.add_argument("target", nargs="?", help="Target directory for the build")
     args = parser.parse_args()
 
-    base = Path(args.target)
-    src = Path(__file__).parent.parent
+    base = Path(__file__).parent.parent
+    if args.target:
+        base = Path(args.target)
+
+    # If nothing specific is requested, refresh everything
+    if not any((args.apps, args.launchers, args.script_deps, args.launcher_links)):
+        args.apps = True
+        args.launchers = True
+        args.script_deps = True
+        args.launcher_links = True
 
     apps = base / "apps"
     tools = base / "tools"
     scripts = base / "scripts"
-
-    # Only rebuild scripts/tools if they aren't already there
-    # or the user explicitly requests it.
-    rebuild_tools = (args.rebuild or not tools.is_dir())
-    rebuild_scripts = (args.rebuild or not scripts.is_dir())
 
     # Create the target directories if they aren't present
     apps.mkdir(parents=True, exist_ok=True)
     tools.mkdir(parents=True, exist_ok=True)
     scripts.mkdir(parents=True, exist_ok=True)
 
-    # Install the required apps. We do this even without
-    # rebuild, as we're upgrading in place in that case
-    for app in ("shiv", "pipx", "virtualenv"):
-        print(f"Application {app}.pyz is already present, updating")
-        if app == "virtualenv":
-            # Virtualenv supplies its own zipapp
-            download_url(apps, VIRTUALENV_URL)
-        else:
-            make_zipapp(apps, app)
+    if args.apps:
+        refresh_apps(apps)
+    if args.launchers:
+        refresh_pylaunch(tools)
+    if args.script_deps:
+        refresh_script_dependencies(scripts)
+    if args.launcher_links:
+        refresh_launcher_links(tools, apps)
+        refresh_launcher_links(tools, scripts)
 
-    # Install the latest launcher. This is an upgrade in place
-    # if the target exists, and any uses of the launcher will
-    # be symlinks, and so will automatically pick up the new
-    # version.
-    get_pylaunch(tools)
-
-    # Only replace the tools and scripts if we're doing a rebuild.
-    if rebuild_tools:
-        shutil.copytree(src / "tools", tools, dirs_exist_ok=True)
-    if rebuild_scripts:
-        shutil.copytree(src / "scripts", scripts, dirs_exist_ok=True)
-
-    # This will upgrade script dependences if they are already installed
-    # TODO: Should we delete existing dependencies on --rebuild?
-    install_script_dependencies(scripts)
-
-    # This will just add new links as needed
-    # TODO: Should it re-write existing links on --rebuild?
-    link_launcher(tools, apps)
-    link_launcher(tools, scripts)
+# TODO: Configuration files
+#   * Powershell profile
+#   * Windows Terminal settings
+#   * Git config
+#   * Keypirinha settings (scoop)
+#
+# TODO: Other applications
+#   * Apps to be installed via pipx
+#   * Scoop apps

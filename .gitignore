@@ -13,6 +13,4 @@ tools/*.exe
 bin/*.exe
 
 # Directories managed by pipx
-logs
-shared
-venvs
+pipx

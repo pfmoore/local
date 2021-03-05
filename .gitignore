@@ -1,7 +1,11 @@
 .vscode
+__pycache__
 
 # Zip apps and similar, created and refreshed on demand
 apps
+
+# Script dependencies
+scripts/__pypackages__/lib
 
 # Executable wrappers for scripts
 scripts/*.exe

@@ -69,19 +69,20 @@ def refresh_pylaunch(dest: Path):
 
 def refresh_script_dependencies(scripts: Path):
     packages = scripts / "__pypackages__"
-    print("Refreshing script dependencies")
-    # First, remove everthing from __pypackages__
-    # that isn't managed by git.
-    subprocess.run([
-        "git", "clean", "-f", "-X", str(packages)
-    ])
+    lib = packages / "lib"
+    if (lib.is_dir()):
+        print("Refreshing script dependencies")
+        shutil.rmtree(lib)
+    else:
+        print("Installing script dependencies")
+
     # Now install the required packages
     subprocess.run([
         sys.executable,
         "-m", "pip",
         "--disable-pip-version-check",
         "install",
-        "--target", packages,
+        "--target", lib,
         "-r", packages / "requirements.txt"
     ])
 

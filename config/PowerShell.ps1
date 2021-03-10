@@ -16,6 +16,12 @@ Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 if (Get-Module -ListAvailable Posh-Git) { Import-Module Posh-Git }
 if (Get-Module -ListAvailable Use-RawPipeline) { Import-Module Use-RawPipeline }
 
+# Fix console history
+# ===================
+#
+# workaround for https://github.com/microsoft/terminal/issues/2558
+py -c "import ctypes; ctypes.windll.kernel32.SetConsoleHistoryInfo(b'\x10\x00\x00\x00\x00\x02\x00\x00 \x00\x00\x00\x01\x00\x00\x00')"
+
 # Zoxide
 # ======
 

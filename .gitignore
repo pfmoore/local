@@ -4,8 +4,9 @@ __pycache__
 # Zip apps and similar, created and refreshed on demand
 apps
 
-# Script dependencies
+# Python dependencies
 scripts/__pypackages__/lib
+config/pyrepl-deps.zip
 
 # Executable wrappers for scripts
 scripts/*.exe

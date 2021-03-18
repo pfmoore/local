@@ -22,6 +22,12 @@ if (Get-Module -ListAvailable Use-RawPipeline) { Import-Module Use-RawPipeline }
 # workaround for https://github.com/microsoft/terminal/issues/2558
 py -c "import ctypes; ctypes.windll.kernel32.SetConsoleHistoryInfo(b'\x10\x00\x00\x00\x00\x02\x00\x00 \x00\x00\x00\x01\x00\x00\x00')"
 
+# Startup file for the Python REPL
+$startup_file = (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Source) ".pystartup.py")
+if (Test-Path -PathType Leaf $startup_file) {
+    $env:PYTHONSTARTUP = $startup_file
+}
+
 # Zoxide
 # ======
 

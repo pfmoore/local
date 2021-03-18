@@ -120,12 +120,24 @@ def refresh_apps(target: Path):
         else:
             make_zipapp(target, app)
 
+def refresh_pyrepl_deps(config: Path):
+    with TemporaryDirectory() as tmp:
+        subprocess.run([
+            sys.executable,
+            "-m", "pip",
+            "--disable-pip-version-check",
+            "install",
+            "--target", tmp,
+            "-r", config / "pyrepl-requirements.txt"
+        ])
+        shutil.make_archive(config / "pyrepl-deps", "zip", tmp)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--apps", action="store_true", help="Refresh zipapps")
     parser.add_argument("--launchers", action="store_true", help="Refresh pylaunch")
     parser.add_argument("--script-deps", action="store_true", help="Refresh script dependencies")
+    parser.add_argument("--pyrepl-deps", action="store_true", help="Refresh Python REPL dependencies")
     parser.add_argument("--launcher-links", action="store_true", help="Refresh launcher links")
     parser.add_argument("target", nargs="?", help="Target directory for the build")
     args = parser.parse_args()
@@ -135,20 +147,23 @@ if __name__ == "__main__":
         base = Path(args.target)
 
     # If nothing specific is requested, refresh everything
-    if not any((args.apps, args.launchers, args.script_deps, args.launcher_links)):
+    if not any((args.apps, args.launchers, args.script_deps, args.pyrepl_deps, args.launcher_links)):
         args.apps = True
         args.launchers = True
         args.script_deps = True
+        args.pyrepl_deps = True
         args.launcher_links = True
 
     apps = base / "apps"
     tools = base / "tools"
     scripts = base / "scripts"
+    config = base / "config"
 
     # Create the target directories if they aren't present
     apps.mkdir(parents=True, exist_ok=True)
     tools.mkdir(parents=True, exist_ok=True)
     scripts.mkdir(parents=True, exist_ok=True)
+    config.mkdir(parents=True, exist_ok=True)
 
     if args.apps:
         refresh_apps(apps)
@@ -156,6 +171,8 @@ if __name__ == "__main__":
         refresh_pylaunch(tools)
     if args.script_deps:
         refresh_script_dependencies(scripts)
+    if args.pyrepl_deps:
+        refresh_pyrepl_deps(config)
     if args.launcher_links:
         refresh_launcher_links(tools, apps)
         refresh_launcher_links(tools, scripts)

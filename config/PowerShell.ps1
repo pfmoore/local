@@ -75,8 +75,8 @@ function Show-VenvPrompt {
 }
 
 function Show-LastTimePrompt {
-    $dur = (get-history -ea 0 -count 1 | % { $_.EndExecutionTime - $_.StartExecutionTime})
-    if ($dur -ne $null) { #  -and $dur.Seconds -gt 0) {
+    $dur = (get-history -ea 0 -count 1 | ForEach-Object { $_.EndExecutionTime - $_.StartExecutionTime})
+    if ($null -ne $dur) { #  -and $dur.Seconds -gt 0) {
         Write-Host -NoNewLine -Fore Blue "$($dur.ToString('mm\:ss\.fff')) "
     }
 }
@@ -151,7 +151,7 @@ function CSV {
     }
 }
 
-$envstack = New-Object Collections.Stack
+# $envstack = New-Object Collections.Stack
 
 #Function Activate-Venv ([String]$EnvName) {
 #    if (!(Test-Path -Type Leaf "$EnvName\Scripts\python.exe")) {
@@ -200,7 +200,7 @@ Function Format-FileSize($size) {
 
 function wmidf {
     Get-WmiObject -query "select * from win32_logicaldisk" |
-        Select DeviceID,
+        Select-Object DeviceID,
                FileSystem,
                @{Name="Size"; Expression={Format-FileSize($_.Size)}},
                @{Name="Free";Expression={Format-FileSize($_.FreeSpace)}},
@@ -208,15 +208,15 @@ function wmidf {
 }
 
 function google {
-    start "https://www.google.co.uk/search?q=$args"
+    Start-Process "https://www.google.co.uk/search?q=$args"
 }
 
 function rust_pg {
-    start "https://play.rust-lang.org/"
+    Start-Process "https://play.rust-lang.org/"
 }
 
 function pep {
-    start ("https://www.python.org/dev/peps/pep-{0:d4}/" -f $args)
+    Start-Process ("https://www.python.org/dev/peps/pep-{0:d4}/" -f $args)
 }
 
 # Wrapping commands with arguments

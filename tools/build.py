@@ -13,6 +13,7 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 
 VIRTUALENV_URL = "https://bootstrap.pypa.io/virtualenv.pyz"
+PIP_URL = "https://github.com/pfmoore/runpip/releases/download/22.1.2/pip-22.1.2.pyz"
 
 MAIN_SCRIPT = """\
 import runpy
@@ -111,12 +112,15 @@ def refresh_launcher_links(tools: Path, target: Path):
 def refresh_apps(target: Path):
     # Install the required apps. We do this even without
     # rebuild, as we're upgrading in place in that case
-    for app in ("shiv", "pipx", "virtualenv"):
+    for app in ("shiv", "pipx", "virtualenv", "pip"):
         action = "Refreshing" if (target / f"{app}.pyz").exists() else "Installing"
         print(f"{action} application {app}")
         if app == "virtualenv":
             # Virtualenv supplies its own zipapp
             download_url(target, VIRTUALENV_URL)
+        elif app == "pip":
+            download_url(target, PIP_URL)
+            (target / "pip-22.1.2.pyz").rename(target / "pip.pyz")
         else:
             make_zipapp(target, app)
 

@@ -89,7 +89,7 @@ def refresh_script_dependencies(scripts: Path):
 PY_EXTENSIONS = [".py", ".pyz", ".pyw", ".pyzw"]
 
 def refresh_launcher_links(tools: Path, target: Path):
-    print(f"Refreshing launcher links in {target.relative_to(Path.cwd())}")
+    print(f"Refreshing launcher links in {target}")
     assert tools.parent == target.parent
     for script in target.glob("*.py*"):
         if script.suffix in PY_EXTENSIONS:

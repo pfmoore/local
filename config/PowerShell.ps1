@@ -42,64 +42,73 @@ Invoke-Expression (& {
 # We do our own prompt management
 $env:VIRTUAL_ENV_DISABLE_PROMPT = "yes"
 
-function Show-VcsPrompt {
-    # Raw search of repo data, using commands is too slow...
-    $root = (Get-Location)
-    while ($root) {
-        if (Test-Path -Type Leaf "$root/.hg/branch") {
-            $branch = (Get-Content "$root/.hg/branch")
-            Write-Host -NoNewline -Fore Green "[HG: $branch] "
-            break
-        }
-        if (Test-Path -Type Leaf "$root/.git/HEAD") {
-            $ref = (Get-Content "$root/.git/HEAD")
-            Write-Host -NoNewline -Fore Green "[Git: "
-            if ($ref -match "^ref:\s*refs/heads/(.*)$") {
-                Write-Host -NoNewline -Fore Green $Matches[1]
-            }
-            else {
-                Write-Host -NoNewline -Fore Green $ref
-            }
-            Write-Host -NoNewline -Fore Green "] "
-            break
-        }
-        $root = Split-Path -Parent $root
-    }
-}
+# Use Oh-My-Posh
+Invoke-Expression (oh-my-posh init pwsh --config ~/.local/config/gustav.omp.json)
 
-function Show-VenvPrompt {
-    if (Test-Path env:VIRTUAL_ENV) {
-        $envname = Split-Path -Leaf $env:VIRTUAL_ENV
-        Write-Host -NoNewline -Fore Green "($envname) "
-    }
-}
+# ======================================================================
+# Old custom prompt handling
+# ======================================================================
 
-function Show-LastTimePrompt {
-    $dur = (get-history -ea 0 -count 1 | ForEach-Object { $_.EndExecutionTime - $_.StartExecutionTime})
-    if ($null -ne $dur) { #  -and $dur.Seconds -gt 0) {
-        Write-Host -NoNewLine -Fore Blue "$($dur.ToString('mm\:ss\.fff')) "
-    }
-}
+## function Show-VcsPrompt {
+##     # Raw search of repo data, using commands is too slow...
+##     $root = (Get-Location)
+##     while ($root) {
+##         if (Test-Path -Type Leaf "$root/.hg/branch") {
+##             $branch = (Get-Content "$root/.hg/branch")
+##             Write-Host -NoNewline -Fore Green "[HG: $branch] "
+##             break
+##         }
+##         if (Test-Path -Type Leaf "$root/.git/HEAD") {
+##             $ref = (Get-Content "$root/.git/HEAD")
+##             Write-Host -NoNewline -Fore Green "[Git: "
+##             if ($ref -match "^ref:\s*refs/heads/(.*)$") {
+##                 Write-Host -NoNewline -Fore Green $Matches[1]
+##             }
+##             else {
+##                 Write-Host -NoNewline -Fore Green $ref
+##             }
+##             Write-Host -NoNewline -Fore Green "] "
+##             break
+##         }
+##         $root = Split-Path -Parent $root
+##     }
+## }
+## 
+## function Show-VenvPrompt {
+##     if (Test-Path env:VIRTUAL_ENV) {
+##         $envname = Split-Path -Leaf $env:VIRTUAL_ENV
+##         Write-Host -NoNewline -Fore Green "($envname) "
+##     }
+## }
+## 
+## function Show-LastTimePrompt {
+##     $dur = (get-history -ea 0 -count 1 | ForEach-Object { $_.EndExecutionTime - $_.StartExecutionTime})
+##     if ($null -ne $dur) { #  -and $dur.Seconds -gt 0) {
+##         Write-Host -NoNewLine -Fore Blue "$($dur.ToString('mm\:ss\.fff')) "
+##     }
+## }
+## 
+## function prompt
+## {
+##     $host.ui.rawui.WindowTitle = $(get-location).ProviderPath
+##     Write-Host -NoNewline -ForegroundColor Cyan "PS "
+##     Write-Host -NoNewline -ForegroundColor Red $(get-date -uformat "%H:%M")
+##     Write-Host -NoNewline " "
+##     Show-VenvPrompt
+##     Show-VcsPrompt
+##     Show-LastTimePrompt
+##     Write-Host -NoNewline -ForegroundColor Yellow $(get-location).ProviderPath
+##     Write-host ""
+##     #Write-Host -NoNewline -ForegroundColor Blue ("-" * $NestedPromptLevel)
+##     Write-Host -NoNewline -ForegroundColor Blue ("-" * (Get-Location -Stack).Count)
+##     #if ($env:ConEmuANSI -eq "ON") {
+##     #    Write-Host -NoNewLine ([char]27 + "[?25h")
+##     #}
+##     #">"
+##     [char]0x276F + " "
+## }
 
-function prompt
-{
-    $host.ui.rawui.WindowTitle = $(get-location).ProviderPath
-    Write-Host -NoNewline -ForegroundColor Cyan "PS "
-    Write-Host -NoNewline -ForegroundColor Red $(get-date -uformat "%H:%M")
-    Write-Host -NoNewline " "
-    Show-VenvPrompt
-    Show-VcsPrompt
-    Show-LastTimePrompt
-    Write-Host -NoNewline -ForegroundColor Yellow $(get-location).ProviderPath
-    Write-host ""
-    #Write-Host -NoNewline -ForegroundColor Blue ("-" * $NestedPromptLevel)
-    Write-Host -NoNewline -ForegroundColor Blue ("-" * (Get-Location -Stack).Count)
-    #if ($env:ConEmuANSI -eq "ON") {
-    #    Write-Host -NoNewLine ([char]27 + "[?25h")
-    #}
-    #">"
-    [char]0x276F + " "
-}
+# ======================================================================
 
 # Utility Functions
 # =================

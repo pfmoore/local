@@ -1,0 +1,113 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "final_space": true,
+  "palette": {
+    // From https://waldyrious.net/viridis-palette-generator/
+    // 11 categories, palette viridis.
+    "c1": "#440154",
+    "c2": "#482475",
+    "c3": "#414487",
+    "c4": "#355f8d",
+    "c5": "#2a788e",
+    "c6": "#21918c",
+    "c7": "#22a884",
+    "c8": "#44bf70",
+    "c9": "#7ad151",
+    "c10": "#bddf26",
+    "c11": "#fde725"
+  },
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "shell",
+          "style": "diamond",
+          // No leading diamond, we want the left to be square.
+          // But we use diamond because that connects properly
+          // to a powerline-type segment.
+          // "leading_diamond": "\ue0b6",
+          // No trailing diamond, the next segment is
+          // powerline so it has a diamond at the start anyway.
+          // "trailing_diamond": "\ue0b0",
+          "foreground": "white",
+          "background": "p:c1",
+          "properties": {
+            "mapped_shell_names": {
+              "pwsh": "PS",
+              "nu": "NU"
+            }
+          }
+        },
+        {
+          "type": "time",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b0",
+          "foreground": "white",
+          "background": "p:c2",
+          "properties": {
+            "time_format": "15:04"
+          }
+        },
+        {
+          "type": "git",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b0",
+          "foreground": "white",
+          "background": "p:c3",
+          "properties": {
+            "fetch_status": false
+          }
+        },
+        {
+          "type": "executiontime",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b0",
+          "foreground": "white",
+          "background": "p:c4",
+          "properties": {
+            "style": "austin"
+          }
+        },
+        {
+          "type": "python",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b0",
+          "foreground": "black",
+          "background": "p:c5",
+          "properties": {
+            "fetch_version": false
+          }
+        },
+        {
+          "type": "path",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b0",
+          "foreground": "black",
+          "background": "p:c6",
+          "properties": {
+            "style": "full"
+          }
+        }
+      ]
+    },
+    {
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "foreground": "#427acd",
+          "foreground_templates": [
+            "{{if .Root}}#ff0000{{end}}"
+          ],
+          "style": "plain",
+          "template": "{{if .Root}}\u276F{{end}}\u276F", // ❯
+          "type": "text"
+        }
+      ],
+      "type": "prompt"
+    }
+  ],
+  "version": 2
+}

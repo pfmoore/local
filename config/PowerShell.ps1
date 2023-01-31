@@ -28,6 +28,11 @@ if (Test-Path -PathType Leaf $startup_file) {
     $env:PYTHONSTARTUP = $startup_file
 }
 
+# Windows Terminal
+
+function nt() { wt -w 0 new-tab $args }
+function np() { wt -w 0 split-pane $args }
+
 # Zoxide
 # ======
 

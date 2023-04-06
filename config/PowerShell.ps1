@@ -30,8 +30,8 @@ if (Test-Path -PathType Leaf $startup_file) {
 
 # Windows Terminal
 
-function nt() { wt -w 0 new-tab $args }
-function np() { wt -w 0 split-pane $args }
+function nt() { wt -w 0 new-tab -d $pwd $args }
+function np() { wt -w 0 split-pane -d $pwd $args }
 
 # Zoxide
 # ======

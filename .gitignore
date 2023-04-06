@@ -15,9 +15,7 @@ scripts/*.exe
 tools/*.exe
 
 # Pipx executable links
-bin/*.exe
-# Special case for mypy
-bin/mypyc
+bin
 
 # Directories managed by pipx
 pipx

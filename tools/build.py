@@ -12,40 +12,6 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 from zipfile import ZipFile
 
-VIRTUALENV_URL = "https://bootstrap.pypa.io/virtualenv.pyz"
-PIP_URL = "https://bootstrap.pypa.io/pip/pip.pyz"
-
-MAIN_SCRIPT = """\
-import runpy
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "site-packages"))
-runpy.run_module("{module}", run_name="__main__")
-"""
-
-def make_zipapp(target: Path, module: str, *extra_pip_args):
-    with TemporaryDirectory() as build:
-        build = Path(build)
-        subprocess.run([
-            sys.executable,
-            "-m", "pip",
-            "--disable-pip-version-check",
-            "--quiet",
-            "install",
-            "--target", os.path.join(build, "site-packages"),
-            module,
-            *extra_pip_args
-        ])
-        main = build / "__main__.py"
-        main.write_text(MAIN_SCRIPT.format(module=module), encoding="utf-8")
-        zipapp.create_archive(build, target / f"{module}.pyz")
-
-def download_url(target: Path, url):
-    # This is a hack, should properly parse out the basename
-    _, _, filename = urlparse(url).path.rpartition('/')
-    with urlopen(url) as src:
-        with open(target / filename, "wb") as dst:
-            shutil.copyfileobj(src, dst)
-
 def refresh_pylaunch(dest: Path):
     USER = "pfmoore"
     PROJECT = "pylaunch"
@@ -109,21 +75,6 @@ def refresh_launcher_links(tools: Path, target: Path):
             else:
                 launcher.symlink_to(pylaunch)
 
-def refresh_apps(target: Path):
-    # Install the required apps. We do this even without
-    # rebuild, as we're upgrading in place in that case
-    for app in ("shiv", "pipx", "virtualenv", "pip"):
-        action = "Refreshing" if (target / f"{app}.pyz").exists() else "Installing"
-        print(f"{action} application {app}")
-        if app == "virtualenv":
-            # Virtualenv supplies its own zipapp
-            download_url(target, VIRTUALENV_URL)
-        elif app == "pip":
-            # Pip supplies its own zipapp
-            download_url(target, PIP_URL)
-        else:
-            make_zipapp(target, app)
-
 def refresh_pyrepl_deps(config: Path):
     with TemporaryDirectory() as tmp:
         subprocess.run([
@@ -138,7 +89,6 @@ def refresh_pyrepl_deps(config: Path):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--apps", action="store_true", help="Refresh zipapps")
     parser.add_argument("--launchers", action="store_true", help="Refresh pylaunch")
     parser.add_argument("--script-deps", action="store_true", help="Refresh script dependencies")
     parser.add_argument("--pyrepl-deps", action="store_true", help="Refresh Python REPL dependencies")
@@ -151,26 +101,21 @@ if __name__ == "__main__":
         base = Path(args.target)
 
     # If nothing specific is requested, refresh everything
-    if not any((args.apps, args.launchers, args.script_deps, args.pyrepl_deps, args.launcher_links)):
-        args.apps = True
+    if not any((args.launchers, args.script_deps, args.pyrepl_deps, args.launcher_links)):
         args.launchers = True
         args.script_deps = True
         args.pyrepl_deps = True
         args.launcher_links = True
 
-    apps = base / "apps"
     tools = base / "tools"
     scripts = base / "scripts"
     config = base / "config"
 
     # Create the target directories if they aren't present
-    apps.mkdir(parents=True, exist_ok=True)
     tools.mkdir(parents=True, exist_ok=True)
     scripts.mkdir(parents=True, exist_ok=True)
     config.mkdir(parents=True, exist_ok=True)
 
-    if args.apps:
-        refresh_apps(apps)
     if args.launchers:
         refresh_pylaunch(tools)
     if args.script_deps:
@@ -178,7 +123,6 @@ if __name__ == "__main__":
     if args.pyrepl_deps:
         refresh_pyrepl_deps(config)
     if args.launcher_links:
-        refresh_launcher_links(tools, apps)
         refresh_launcher_links(tools, scripts)
 
 # TODO: Configuration files

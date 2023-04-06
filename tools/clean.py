@@ -12,15 +12,8 @@ if __name__ == "__main__":
     if args.target:
         base = Path(args.target)
 
-    apps = base / "apps"
     tools = base / "tools"
     scripts = base / "scripts"
-
-    if apps.is_dir():
-        print("Removing the apps directory")
-        shutil.rmtree(apps)
-    else:
-        print("Apps directory does not exist")
 
     lib = scripts / "__pypackages__/lib"
     if lib.is_dir():
